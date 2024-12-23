@@ -1,44 +1,45 @@
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, jsonify
 
-app = Flask(__name__)
+# URL de la page principale contenant les informations sur les decks
+BASE_URL = 'https://www.millenium.org/guide/419010.html'
 
-# Example URL: Replace with a real Pokémon TCG deck URL
-SCRAPING_URL = "https://example.com/top-decks"
-
-@app.route('/scrape-decks', methods=['GET'])
+# Fonction pour extraire les informations des decks sur la page
 def scrape_decks():
-    """Scrape top Pokémon TCG decks from a website."""
-    try:
-        # Fetch the webpage content
-        response = requests.get(SCRAPING_URL)
-        response.raise_for_status()
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(BASE_URL, headers=headers)
+    response.raise_for_status()
 
-        # Parse the HTML content
-        soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Extract relevant data (update selectors based on the target website)
-        decks = []
-        deck_elements = soup.select('.deck-card')  # Example CSS class for deck containers
+    # Trouver tous les éléments correspondant aux tiers
+    tiers = soup.select('.article__subsubtitle')
+    deck_data = []
 
-        for element in deck_elements:
-            name = element.select_one('.deck-name').text.strip()
-            win_rate = element.select_one('.win-rate').text.strip()
-            core_cards = [card.text.strip() for card in element.select('.core-card')]
-            description = element.select_one('.deck-description').text.strip()
+    for tier in tiers:
+        tier_name = tier.get_text(strip=True)
 
-            decks.append({
-                "name": name,
-                "winRate": win_rate,
-                "coreCards": core_cards,
-                "description": description
+        # Trouver les decks associés à ce tier
+        decks = tier.find_next_siblings('div', class_='w-list-items__subtitle')
+        for deck in decks:
+            deck_name = deck.get_text(strip=True)
+
+            # Trouver le contenu du deck (description ou détails)
+            content_element = deck.find_next('p', class_='article__paragraph')
+            deck_content = content_element.get_text(strip=True) if content_element else "No content available"
+
+            deck_data.append({
+                'tier': tier_name,
+                'name': deck_name,
+                'content': deck_content
             })
 
-        return jsonify(decks)
+    return deck_data
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Failed to fetch data", "details": str(e)}), 500
-
+# Exécuter le script et afficher les résultats
 if __name__ == '__main__':
-    app.run(debug=True)
+    decks = scrape_decks()
+    for deck in decks:
+        print(f"Tier: {deck['tier']}")
+        print(f"Nom du deck: {deck['name']}")
+        print(f"Contenu: {deck['content']}\n")
