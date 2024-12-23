@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Decks for Pokémon TCG</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f5;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #ffcc00;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        main {
+            padding: 20px;
+        }
+        .deck {
+            background: #fff;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .deck h2 {
+            margin-top: 0;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Top Decks for Pokémon TCG</h1>
+        <p>Automatically updated with the best decks for success!</p>
+    </header>
+    <main>
+        <div id="decks-container">
+            <!-- Decks will be dynamically loaded here -->
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Pokémon TCG Deck Builder. All rights reserved.</p>
+    </footer>
+
+    <script>
+        async function fetchTopDecks() {
+            try {
+                const response = await fetch('https://api.example.com/top-decks'); // Replace with a real API endpoint
+                const decks = await response.json();
+
+                const container = document.getElementById('decks-container');
+                container.innerHTML = '';
+
+                decks.forEach(deck => {
+                    const deckElement = document.createElement('div');
+                    deckElement.className = 'deck';
+                    deckElement.innerHTML = `
+                        <h2>${deck.name}</h2>
+                        <p><strong>Win Rate:</strong> ${deck.winRate}%</p>
+                        <p><strong>Core Cards:</strong> ${deck.coreCards.join(', ')}</p>
+                        <p><strong>Description:</strong> ${deck.description}</p>
+                    `;
+                    container.appendChild(deckElement);
+                });
+            } catch (error) {
+                console.error('Error fetching decks:', error);
+                const container = document.getElementById('decks-container');
+                container.innerHTML = '<p>Failed to load decks. Please try again later.</p>';
+            }
+        }
+
+        // Fetch decks every hour
+        fetchTopDecks();
+        setInterval(fetchTopDecks, 60 * 60 * 1000);
+    </script>
+</body>
+</html>
